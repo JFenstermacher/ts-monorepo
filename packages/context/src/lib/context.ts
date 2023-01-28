@@ -1,13 +1,11 @@
 import {
   ContextDefaults,
-  NameAttributeKey,
   Environment,
   Tags,
   StringCase,
   ContextInput,
   ContextType,
-  ContextIdAttributes,
-  NameAttributeKeys
+  NameAttributeKeys,
 } from './types';
 import { applyStrCase } from './utils';
 
@@ -18,20 +16,10 @@ const CONTEXT_DEFAULTS: ContextDefaults = {
   delimiter: "-",
   idLengthLimit: 255,
   tags: {},
-  labelKeyCase: "lowercase",
+  labelKeyCase: "title",
   labelValueCase: "lowercase",
   labelsAsTags: ["project", "service", "environment", "name"]
 }
-
-const ID_KEYS: NameAttributeKey[] = [
-  "organization",
-  "project",
-  "service",
-  "environment",
-  "name",
-  "attributes"
-];
-
 
 export default class Context {
   organization?: string
@@ -45,13 +33,14 @@ export default class Context {
   labelOrder: NameAttributeKeys
   delimiter: string
   idLengthLimit: number
-  tags: Tags
+  _tags: Tags
   labelKeyCase: StringCase
   labelValueCase: StringCase
   labelsAsTags: NameAttributeKeys
 
   id: string
   idFull: string
+  labelTags: Tags
 
   constructor(context: ContextInput) {
     const merged = { ...CONTEXT_DEFAULTS, ...context };
@@ -71,11 +60,12 @@ export default class Context {
     this.labelKeyCase = merged.labelKeyCase;
     this.labelValueCase = merged.labelValueCase;
     this.labelsAsTags = merged.labelsAsTags;
+    this._tags = merged.tags
 
     this.idFull = this._constructIdFull(merged);
     this.id = this.idFull.substring(0, this.idLengthLimit);
 
-    this.tags = this._constructTags(merged);
+    this.labelTags = this._constructLabelTags(merged);
   }
 
   get context(): ContextType {
@@ -93,64 +83,61 @@ export default class Context {
       labelKeyCase: this.labelKeyCase,
       labelValueCase: this.labelValueCase,
       labelsAsTags: this.labelsAsTags,
-      tags: this.tags
+      tags: this._tags
+    }
+  }
+
+  get tags(): Tags {
+    const formattedTags: Tags = {};
+
+    for (const [key, value] of Object.entries(this._tags)) {
+      formattedTags[applyStrCase(key, this.labelKeyCase)] = applyStrCase(value, this.labelValueCase);
+    }
+
+    return {
+      ...this.labelTags,
+      ...formattedTags
     }
   }
 
   _constructIdFull(context: ContextType) {
-    const idAttributes = this._getIdAttributes(context);
-
-    return Object.values(idAttributes).join(this.delimiter);
-  }
-
-  _constructTags(context: ContextType) {
-    const tags: Tags = {};
-
-    const idAttributes = this._getIdAttributes(context);
-
-    for (let [key, value] of Object.entries(idAttributes)) {
-      if (Array.isArray(value)) {
-        value = value
-          .map(v => applyStrCase(v, context.labelValueCase))
-          .join(",");
-      }
-
-      tags[applyStrCase(key, context.labelKeyCase)] = value;
-    }
-
-    return {
-      ...tags,
-      ...context.tags,
-      name: this.id
-    };
-  }
-
-  _getIdAttributes(context: ContextType): ContextIdAttributes {
-    const idAttributes: Partial<ContextIdAttributes> = {}
+    const parts: string[] = [];
 
     for (const label of context.labelOrder) {
-      const value = context[label];
+      let value = context[label];
 
-      if (value) idAttributes[label] = value as any;
+      if (!value) continue;
+
+      if (Array.isArray(value)) parts.push(...value);
+      else parts.push(value);
     }
 
-    return idAttributes as ContextIdAttributes;
+    return parts.join(context.delimiter);
   }
 
+  _constructLabelTags(context: ContextType) {
+    const labelTags: Record<string, string> = {};
+
+    for (const label of context.labelsAsTags) {
+      let value = context[label];
+
+      if (!value) continue;
+
+      if (!Array.isArray(value)) value = [value];
+
+      labelTags[applyStrCase(label, context.labelKeyCase)] = value
+        .map(v => applyStrCase(v, context.labelValueCase))
+        .join(',');
+    }
+
+    if (context.labelsAsTags.includes("name")) labelTags[applyStrCase("name", context.labelKeyCase)] = applyStrCase(this.id, context.labelValueCase);
+
+    return labelTags;
+  }
 
   _validate(context: ContextType) {
     if (!context.labelOrder || !context.labelOrder.length) {
       throw Error("At least one label has to be provided in 'labelOrder'")
-    }
-
-    const hasIdAttribute = ID_KEYS.reduce((retval, key) => {
-      if (context[key]) retval = true;
-
-      return retval;
-    }, false)
-
-    if (!hasIdAttribute) {
-      throw Error(`At least one ID attribute must be defined: [${ID_KEYS.join(", ")}]`)
     }
   }
 }
