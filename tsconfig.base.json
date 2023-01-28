@@ -15,7 +15,10 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@JFenstermacher/context": ["packages/context/src/index.ts"]
+      "@JFenstermacher/context": ["packages/context/src/index.ts"],
+      "@JFenstermacher/tfcdk-aws-iam-role": [
+        "packages/tfcdk-aws-iam-role/src/index.ts"
+      ]
     }
   },
   "exclude": ["node_modules", "tmp"]
