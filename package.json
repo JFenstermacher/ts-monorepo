@@ -5,6 +5,9 @@
   "license": "MIT",
   "private": true,
   "dependencies": {
+    "@cdktf/provider-aws": "^12.0.2",
+    "cdktf": "^0.15.2",
+    "constructs": "^10.1.233",
     "tslib": "^2.3.0"
   },
   "devDependencies": {
