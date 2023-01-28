@@ -1,39 +1,17 @@
-export type EnvironmentLong = "sandbox" | "staging" | "uat" | "production" | "ephemeral" | "organization";
-export type EnvironmentShort = "sandbox" | "staging" | "uat" | "prod" | "org" | "ephm";
-export type Environment = EnvironmentLong | EnvironmentShort;
+import {
+  ContextDefaults,
+  NameAttributeKey,
+  Environment,
+  Tags,
+  StringCase,
+  ContextInput,
+  ContextType,
+  ContextIdAttributes,
+  NameAttributeKeys
+} from './types';
+import { applyStrCase } from './utils';
 
-export type StringCase = "title" | "lowercase" | "uppercase"
-
-type RequiredContextIdAttributes = {
-  project: string
-  service: string
-  environment: Environment
-}
-
-type ContextTypeIdAttributes = {
-  organization: string
-  name: string
-  attributes: string[]
-} & RequiredContextIdAttributes
-
-type Tags = {
-  [k: string]: string
-}
-
-type NameAttributeKeys = Array<keyof ContextTypeIdAttributes>
-
-export type ContextType = ContextTypeIdAttributes & {
-  labelOrder: NameAttributeKeys
-  delimiter: string
-  idLengthLimit: number
-  tags: Tags
-  labelKeyCase: StringCase
-  labelValueCase: StringCase
-  labelsAsTags: NameAttributeKeys
-  enabled: boolean
-}
-
-const CONTEXT_DEFAULTS: Partial<ContextType> = {
+const CONTEXT_DEFAULTS: ContextDefaults = {
   enabled: true,
   organization: "JFenstermacher",
   labelOrder: ["service", "environment", "name"],
@@ -45,7 +23,7 @@ const CONTEXT_DEFAULTS: Partial<ContextType> = {
   labelsAsTags: ["project", "service", "environment", "name"]
 }
 
-const ID_KEYS: NameAttributeKeys = [
+const ID_KEYS: NameAttributeKey[] = [
   "organization",
   "project",
   "service",
@@ -57,26 +35,28 @@ const ID_KEYS: NameAttributeKeys = [
 
 export default class Context {
   organization?: string
-  project?: string
-  service?: string
-  environment?: Environment
+  project: string
+  service: string
+  environment: Environment
   name?: string
   attributes?: string[]
 
-  enabled?: boolean
-  labelOrder?: NameAttributeKeys
-  delimiter?: string
-  idLengthLimit?: number
-  tags?: Tags
-  labelKeyCase?: StringCase
-  labelValueCase?: StringCase
-  labelsAsTags?: NameAttributeKeys
+  enabled: boolean
+  labelOrder: NameAttributeKeys
+  delimiter: string
+  idLengthLimit: number
+  tags: Tags
+  labelKeyCase: StringCase
+  labelValueCase: StringCase
+  labelsAsTags: NameAttributeKeys
 
   id: string
   idFull: string
 
-  constructor(context: Context) {
+  constructor(context: ContextInput) {
     const merged = { ...CONTEXT_DEFAULTS, ...context };
+
+    this._validate(merged);
 
     this.organization = merged.organization;
     this.project = merged.project;
@@ -92,17 +72,13 @@ export default class Context {
     this.labelValueCase = merged.labelValueCase;
     this.labelsAsTags = merged.labelsAsTags;
 
-    this.tags = merged.tags;
+    this.idFull = this._constructIdFull(merged);
+    this.id = this.idFull.substring(0, this.idLengthLimit);
 
-    this.id = "abc";
-    this.idFull = "abc";
+    this.tags = this._constructTags(merged);
   }
 
-  _createFullId(context: ContextType) {
-    return "abc"
-  }
-
-  get context(): Partial<ContextType> {
+  get context(): ContextType {
     return {
       organization: this.organization,
       project: this.project,
@@ -116,11 +92,53 @@ export default class Context {
       idLengthLimit: this.idLengthLimit,
       labelKeyCase: this.labelKeyCase,
       labelValueCase: this.labelValueCase,
-      labelsAsTags: this.labelsAsTags
+      labelsAsTags: this.labelsAsTags,
+      tags: this.tags
     }
   }
 
-  _validate(context: Partial<ContextType>) {
+  _constructIdFull(context: ContextType) {
+    const idAttributes = this._getIdAttributes(context);
+
+    return Object.values(idAttributes).join(this.delimiter);
+  }
+
+  _constructTags(context: ContextType) {
+    const tags: Tags = {};
+
+    const idAttributes = this._getIdAttributes(context);
+
+    for (let [key, value] of Object.entries(idAttributes)) {
+      if (Array.isArray(value)) {
+        value = value
+          .map(v => applyStrCase(v, context.labelValueCase))
+          .join(",");
+      }
+
+      tags[applyStrCase(key, context.labelKeyCase)] = value;
+    }
+
+    return {
+      ...tags,
+      ...context.tags,
+      name: this.id
+    };
+  }
+
+  _getIdAttributes(context: ContextType): ContextIdAttributes {
+    const idAttributes: Partial<ContextIdAttributes> = {}
+
+    for (const label of context.labelOrder) {
+      const value = context[label];
+
+      if (value) idAttributes[label] = value as any;
+    }
+
+    return idAttributes as ContextIdAttributes;
+  }
+
+
+  _validate(context: ContextType) {
     if (!context.labelOrder || !context.labelOrder.length) {
       throw Error("At least one label has to be provided in 'labelOrder'")
     }
