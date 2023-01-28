@@ -1,5 +1,5 @@
 import { Construct as BaseConstruct } from 'constructs';
-import { Context } from '@JFenstermacher/context';
+import { Context } from './context';
 import { ConstructConfig } from './types';
 
 export class Construct extends BaseConstruct {

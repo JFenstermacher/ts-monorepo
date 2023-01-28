@@ -1,5 +1,5 @@
 import { Testing } from 'cdktf';
-import { Context } from '@JFenstermacher/context';
+import { Context } from './context';
 import { Construct } from './construct';
 
 describe('Construct', () => {
