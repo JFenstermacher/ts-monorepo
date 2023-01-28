@@ -1,49 +1,40 @@
 import {
-  ContextDefaults,
   Environment,
   Tags,
   StringCase,
   ContextInput,
   ContextType,
-  NameAttributeKeys,
+  IdAttributeKeys,
+  ExtractableContext,
 } from './types';
+import { ID_KEYS, CONTEXT_DEFAULTS, CONTEXT_KEYS } from './consts';
 import { applyStrCase } from './utils';
 
-const CONTEXT_DEFAULTS: ContextDefaults = {
-  enabled: true,
-  organization: "JFenstermacher",
-  labelOrder: ["service", "environment", "name"],
-  delimiter: "-",
-  idLengthLimit: 255,
-  tags: {},
-  labelKeyCase: "title",
-  labelValueCase: "lowercase",
-  labelsAsTags: ["project", "service", "environment", "name"]
-}
 
-export default class Context {
+export class Context {
   organization?: string
-  project: string
-  service: string
-  environment: Environment
+  project?: string
+  service?: string
+  environment?: Environment
   name?: string
   attributes?: string[]
 
   enabled: boolean
-  labelOrder: NameAttributeKeys
+  labelOrder: IdAttributeKeys
   delimiter: string
   idLengthLimit: number
   _tags: Tags
   labelKeyCase: StringCase
   labelValueCase: StringCase
-  labelsAsTags: NameAttributeKeys
+  labelsAsTags: IdAttributeKeys
 
   id: string
   idFull: string
   labelTags: Tags
 
-  constructor(context: ContextInput) {
-    const merged = { ...CONTEXT_DEFAULTS, ...context };
+  constructor(context: ExtractableContext) {
+    const extract = Context.extractContext(context);
+    const merged = { ...CONTEXT_DEFAULTS, ...extract };
 
     this._validate(merged);
 
@@ -104,7 +95,7 @@ export default class Context {
     const parts: string[] = [];
 
     for (const label of context.labelOrder) {
-      let value = context[label];
+      const value = context[label];
 
       if (!value) continue;
 
@@ -137,7 +128,29 @@ export default class Context {
 
   _validate(context: ContextType) {
     if (!context.labelOrder || !context.labelOrder.length) {
-      throw Error("At least one label has to be provided in 'labelOrder'")
+      throw Error("At least one label has to be provided in 'labelOrder'");
     }
+
+    const existingIdAttribute = ID_KEYS.reduce((retval, key) => {
+      if (context[key]) retval = true;
+
+      return retval;
+    }, false)
+
+    if (!existingIdAttribute) {
+      throw Error("At least one ID attribute has to be passed.");
+    }
+  }
+
+  static extractContext(input: ExtractableContext): ContextInput {
+    const context: Record<string, any> = {};
+
+    for (const key of CONTEXT_KEYS) {
+      const value = input[key];
+
+      if (value) context[key] = value;
+    }
+
+    return context;
   }
 }
