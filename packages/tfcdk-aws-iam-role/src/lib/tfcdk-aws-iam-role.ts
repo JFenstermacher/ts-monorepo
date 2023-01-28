@@ -1,11 +1,13 @@
+import * as aws from '@cdktf/provider-aws';
 import { Construct } from 'constructs';
-import { IamRole } from '@cdktf/provider-aws/lib/iam-role';
 import { Context, ContextInput, ContextType } from '@JFenstermacher/context';
 import { AwsProvider } from '@cdktf/provider-aws/lib/provider';
+import { PrincipalIdentifiers } from './types';
 
 type AwsIamRoleConfig = ContextInput & {
   context?: ContextType
   provider?: AwsProvider
+  assumeRolePrincipals?: Princip
 }
 
 export default class AwsIamRole extends Construct {
@@ -13,10 +15,17 @@ export default class AwsIamRole extends Construct {
     super(scope, id);
 
     const context = new Context({
-      ...config.context
+      ...config.context,
+      ...config
+    });
+
+    new aws.dataAwsIamPolicyDocument.DataAwsIamPolicyDocument(this, 'assume_role', {
+      statement: [{
+        principals: []
+      }]
     })
 
-    new IamRole(this, 'role', {
+    new aws.iamRole.IamRole(this, 'role', {
       name: context.id
     })
   }

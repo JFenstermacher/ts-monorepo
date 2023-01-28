@@ -32,9 +32,8 @@ export class Context {
   idFull: string
   labelTags: Tags
 
-  constructor(context: ExtractableContext) {
-    const extract = Context.extractContext(context);
-    const merged = { ...CONTEXT_DEFAULTS, ...extract };
+  constructor(context: ContextInput) {
+    const merged = { ...CONTEXT_DEFAULTS, ...context };
 
     this._validate(merged);
 

@@ -18,7 +18,8 @@
       "@JFenstermacher/context": ["packages/context/src/index.ts"],
       "@JFenstermacher/tfcdk-aws-iam-role": [
         "packages/tfcdk-aws-iam-role/src/index.ts"
-      ]
+      ],
+      "@JFenstermacher/tfcdk-common": ["packages/tfcdk-common/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

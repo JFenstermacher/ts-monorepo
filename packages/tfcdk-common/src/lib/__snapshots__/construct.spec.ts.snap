@@ -1,0 +1,36 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Construct should manage context merging and creation 1`] = `
+Context {
+  "_tags": Object {},
+  "attributes": undefined,
+  "delimiter": "-",
+  "enabled": true,
+  "environment": undefined,
+  "id": "initial",
+  "idFull": "initial",
+  "idLengthLimit": 255,
+  "labelKeyCase": "title",
+  "labelOrder": Array [
+    "service",
+    "environment",
+    "name",
+  ],
+  "labelTags": Object {
+    "Name": "initial",
+    "Project": "overtop",
+    "Service": "initial",
+  },
+  "labelValueCase": "lowercase",
+  "labelsAsTags": Array [
+    "project",
+    "service",
+    "environment",
+    "name",
+  ],
+  "name": undefined,
+  "organization": "JFenstermacher",
+  "project": "overtop",
+  "service": "initial",
+}
+`;
