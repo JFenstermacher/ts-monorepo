@@ -140,16 +140,4 @@ export class Context {
       throw Error("At least one ID attribute has to be passed.");
     }
   }
-
-  static extractContext(input: ExtractableContext): ContextInput {
-    const context: Record<string, any> = {};
-
-    for (const key of CONTEXT_KEYS) {
-      const value = input[key];
-
-      if (value) context[key] = value;
-    }
-
-    return context;
-  }
 }
