@@ -1,6 +1,6 @@
 import * as aws from '@cdktf/provider-aws';
 import { AwsProvider } from "@cdktf/provider-aws/lib/provider"
-import { ContextInput, ContextType } from "@JFenstermacher/context"
+import { ConstructConfig } from '@JFenstermacher/tfcdk-common';
 
 export type PrincipalTypes = "AWS" | "Service" | "Federated" | "CanonicalUser" | "*"
 export type PrincipalIdentifiers = Record<keyof PrincipalTypes, string[]>
@@ -11,8 +11,7 @@ export type AssumeRoleConfig = {
   config?: aws.dataAwsIamPolicyDocument.DataAwsIamPolicyDocumentConfig
 }
 
-export type AwsIamRoleConfig = ContextInput & {
-  context?: ContextType
+export type AwsIamRoleConfig = ConstructConfig & {
   provider?: AwsProvider
   assumeRolePrincipals?: PrincipalIdentifiers
   assumeRoleActions?: string[]

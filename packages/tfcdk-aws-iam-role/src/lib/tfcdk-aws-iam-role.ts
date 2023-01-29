@@ -1,32 +1,40 @@
 import * as aws from '@cdktf/provider-aws';
-import { Construct } from 'constructs';
-import { Context, ContextInput, ContextType } from '@JFenstermacher/context';
-import { AwsProvider } from '@cdktf/provider-aws/lib/provider';
-import { PrincipalIdentifiers } from './types';
+import { Construct } from '@JFenstermacher/tfcdk-common';
+import { DEFAULT_ASSUME_ROLE_ACTIONS } from './consts';
+import { AwsIamRoleConfig } from './types';
 
-type AwsIamRoleConfig = ContextInput & {
-  context?: ContextType
-  provider?: AwsProvider
-  assumeRolePrincipals?: Princip
-}
+export class AwsIamRole extends Construct {
+  assumeRolePolicy: aws.dataAwsIamPolicyDocument.DataAwsIamPolicyDocument
+  role: aws.iamRole.IamRole
 
-export default class AwsIamRole extends Construct {
   constructor(scope: Construct, id: string, config: AwsIamRoleConfig) {
-    super(scope, id);
+    super(scope, id, config);
 
-    const context = new Context({
-      ...config.context,
-      ...config
-    });
+    this.assumeRolePolicy = this._createAssumeRolePolicyDocument(config);
 
-    new aws.dataAwsIamPolicyDocument.DataAwsIamPolicyDocument(this, 'assume_role', {
-      statement: [{
-        principals: []
-      }]
+    this.role = new aws.iamRole.IamRole(this, 'role', {
+      name: this.context.id,
+      assumeRolePolicy: this.assumeRolePolicy.json
     })
+  }
 
-    new aws.iamRole.IamRole(this, 'role', {
-      name: context.id
+  _createAssumeRolePolicyDocument({ assumeRolePrincipals, assumeRoleActions, assumeRolePolicy }: AwsIamRoleConfig) {
+    if (assumeRolePolicy) return new aws.dataAwsIamPolicyDocument.DataAwsIamPolicyDocument(this, 'assume_role',)
+
+    assumeRoleActions = assumeRoleActions ?? DEFAULT_ASSUME_ROLE_ACTIONS;
+
+    if (!assumeRolePrincipals) {
+      throw Error("")
+    }
+
+    return new aws.dataAwsIamPolicyDocument.DataAwsIamPolicyDocument(this, 'assume_role', {
+      statement: [{
+        principals: Object.entries(assumeRolePrincipals).map(([type, identifiers]) => ({
+          type,
+          identifiers
+        })),
+        actions: assumeRoleActions
+      }]
     })
   }
 }
