@@ -31,9 +31,7 @@ export type Tags = Record<string, string>
 
 export type ContextType = Partial<ContextIdAttributes> & ContextMetaAttributes
 export type ContextInput = Partial<ContextIdAttributes> & Partial<ContextMetaAttributes>
-export type ExtractableContext = ContextInput & {
-  [k: string]: any
-}
+export type ExtractableContext = ContextInput & Record<string, any>
 
 export type ContextKey = keyof ContextType
 export type ContextKeys = ContextKey[]

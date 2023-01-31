@@ -5,9 +5,8 @@ import {
   ContextInput,
   ContextType,
   IdAttributeKeys,
-  ExtractableContext,
 } from './types';
-import { ID_KEYS, CONTEXT_DEFAULTS, CONTEXT_KEYS } from './consts';
+import { ID_KEYS, CONTEXT_DEFAULTS } from './consts';
 import { applyStrCase } from './utils';
 
 

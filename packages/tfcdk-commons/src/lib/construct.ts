@@ -24,4 +24,3 @@ export class Construct extends BaseConstruct {
     return new Context(context);
   }
 }
-
