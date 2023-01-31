@@ -1,26 +1,20 @@
 import { Construct as BaseConstruct } from 'constructs';
 import { CONTEXT_KEYS } from './consts';
 import { Context } from './context';
-import { ConstructConfig } from './types';
+import { ConstructProps } from './types';
 
 export class Construct extends BaseConstruct {
   context: Context
 
-  constructor(scope: BaseConstruct, id: string, config: ConstructConfig) {
+  constructor(scope: BaseConstruct, id: string, props: ConstructProps) {
     super(scope, id);
 
-    this.context = this._extractContextFromConfig(config);
+    this.context = this._extractContextFromProps(props);
   }
 
-  _extractContextFromConfig(config: ConstructConfig): Context {
-    const context: Record<string, any> = config.context ?? {};
+  _extractContextFromProps(props: ConstructProps): Context {
+    const initial: Record<string, any> = props.context ?? {};
 
-    for (const key of CONTEXT_KEYS) {
-      const value = config[key];
-
-      if (value) context[key] = value;
-    }
-
-    return new Context(context);
+    return Context.extract(props, CONTEXT_KEYS, initial);
   }
 }

@@ -30,14 +30,14 @@ export type ContextMetaAttributes = {
 export type Tags = Record<string, string>
 
 export type ContextType = Partial<ContextIdAttributes> & ContextMetaAttributes
-export type ContextInput = Partial<ContextIdAttributes> & Partial<ContextMetaAttributes>
+export type ContextInput = Partial<ContextType>
 export type ExtractableContext = ContextInput & Record<string, any>
 
 export type ContextKey = keyof ContextType
 export type ContextKeys = ContextKey[]
 
-export type BaseConstructConfig = ContextInput & {
+export type BaseConstructProps = ContextInput & {
   context?: ContextType
 }
 
-export type ConstructConfig = BaseConstructConfig & Record<string, any>
+export type ConstructProps = BaseConstructProps & Record<string, any>

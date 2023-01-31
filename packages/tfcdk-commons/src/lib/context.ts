@@ -5,8 +5,10 @@ import {
   ContextInput,
   ContextType,
   IdAttributeKeys,
+  ExtractableContext,
+  ContextKeys,
 } from './types';
-import { ID_KEYS, CONTEXT_DEFAULTS } from './consts';
+import { ID_KEYS, CONTEXT_DEFAULTS, CONTEXT_KEYS } from './consts';
 import { applyStrCase } from './utils';
 
 
@@ -138,5 +140,15 @@ export class Context {
     if (!existingIdAttribute) {
       throw Error("At least one ID attribute has to be passed.");
     }
+  }
+
+  static extract(props: ExtractableContext, keys: ContextKeys = CONTEXT_KEYS, context: Record<string, any> = {}) {
+    for (const key of keys) {
+      const value = props[key];
+
+      if (value) context[key] = value;
+    }
+
+    return new Context(context);
   }
 }

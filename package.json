@@ -5,6 +5,7 @@
   "license": "MIT",
   "private": true,
   "dependencies": {
+    "@aws-cdk/aws-iam": "^1.190.0",
     "@cdktf/provider-aws": "^12.0.2",
     "cdktf": "^0.15.2",
     "constructs": "^10.1.233",
