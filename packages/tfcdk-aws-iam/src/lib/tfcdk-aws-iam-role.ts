@@ -1,41 +1,57 @@
-import * as aws from '@cdktf/provider-aws';
-import { Construct } from '@JFenstermacher/tfcdk-common';
-import { DEFAULT_ASSUME_ROLE_ACTIONS } from './consts';
-import { AwsIamRoleConfig } from './types';
+import { IamRole, IamRoleInlinePolicy } from '@cdktf/provider-aws/lib/iam-role';
+import { DataAwsIamPolicyDocument } from '@cdktf/provider-aws/lib/data-aws-iam-policy-document';
+import { DataAwsIamPolicy } from '@cdktf/provider-aws/lib/data-aws-iam-policy';
+import { Construct } from '@JFenstermacher/tfcdk-commons';
+import { AwsIamRoleProps, InlinePolicy } from './types';
 
 export class AwsIamRole extends Construct {
-  assumeRolePolicy: aws.dataAwsIamPolicyDocument.DataAwsIamPolicyDocument
-  role: aws.iamRole.IamRole
+  assumeRolePolicyDocument: DataAwsIamPolicyDocument
+  inlinePolicies?: Record<string, DataAwsIamPolicyDocument>
+  permissionsBoundary?: DataAwsIamPolicy
+  role: IamRole
 
-  constructor(scope: Construct, id: string, config: AwsIamRoleConfig) {
-    super(scope, id, config);
+  constructor(scope: Construct, id: string, props: AwsIamRoleProps) {
+    super(scope, id, props);
 
-    this.assumeRolePolicy = this._createAssumeRolePolicyDocument(config);
+    this.inlinePolicies = this._createInlinePolicies(props.inlinePolicy)
+    this.assumeRolePolicyDocument = new DataAwsIamPolicyDocument(this, 'assume_role_policy_document', props.assumeRolePolicy);
+    this.permissionsBoundary = this._getPermissionBoundary(props.permissionsBoundaryName)
 
-    this.role = new aws.iamRole.IamRole(this, 'role', {
+    this.role = new IamRole(this, 'role', {
       name: this.context.id,
-      assumeRolePolicy: this.assumeRolePolicy.json
+      assumeRolePolicy: this.assumeRolePolicyDocument.json,
+      inlinePolicy: this._generateInlinePolicy(this.inlinePolicies),
+      maxSessionDuration: props.maxSessionDuration,
+      permissionsBoundary: this.permissionsBoundary ? this.permissionsBoundary.arn : undefined
     })
   }
 
-  _createAssumeRolePolicyDocument({ assumeRolePrincipals, assumeRoleActions, assumeRolePolicy }: AwsIamRoleConfig) {
-    if (assumeRolePolicy) return new aws.dataAwsIamPolicyDocument.DataAwsIamPolicyDocument(this, 'assume_role',)
+  _createInlinePolicies(policy?: InlinePolicy) {
+    if (!policy) return policy;
 
-    assumeRoleActions = assumeRoleActions ?? DEFAULT_ASSUME_ROLE_ACTIONS;
+    const inlinePolicies: Record<string, DataAwsIamPolicyDocument> = {}
 
-    if (!assumeRolePrincipals) {
-      throw Error("")
+    for (const [name, config] of Object.entries(policy)) {
+      inlinePolicies[name] = new DataAwsIamPolicyDocument(this, `${name}_inline_policy`, config);
     }
 
-    return new aws.dataAwsIamPolicyDocument.DataAwsIamPolicyDocument(this, 'assume_role', {
-      statement: [{
-        principals: Object.entries(assumeRolePrincipals).map(([type, identifiers]) => ({
-          type,
-          identifiers
-        })),
-        actions: assumeRoleActions
-      }]
+    return inlinePolicies;
+  }
+
+  _generateInlinePolicy(policy?: Record<string, DataAwsIamPolicyDocument>): IamRoleInlinePolicy[] | undefined {
+    if (!policy) return policy;
+
+    return Object.entries(policy).map(([name, doc]) => ({
+      name,
+      policy: doc.json
+    }))
+  }
+
+  _getPermissionBoundary(boundaryName?: string) {
+    if (boundaryName === undefined) return boundaryName;
+
+    return new DataAwsIamPolicy(this, 'boundary', {
+      name: boundaryName
     })
   }
 }
-

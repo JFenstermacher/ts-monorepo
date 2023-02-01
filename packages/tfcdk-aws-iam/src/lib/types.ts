@@ -1,19 +1,39 @@
-import * as aws from '@cdktf/provider-aws';
 import { AwsProvider } from "@cdktf/provider-aws/lib/provider"
-import { ConstructConfig } from '@JFenstermacher/tfcdk-common';
+import { ConstructProps } from '@JFenstermacher/tfcdk-commons';
+import { DataAwsIamPolicyDocumentConfig } from '@cdktf/provider-aws/lib/data-aws-iam-policy-document';
 
+export type Effect = "Allow" | "Deny"
 export type PrincipalTypes = "AWS" | "Service" | "Federated" | "CanonicalUser" | "*"
-export type PrincipalIdentifiers = Record<keyof PrincipalTypes, string[]>
+export type Principals = Record<keyof PrincipalTypes, string[]>
 
-export type AssumeRoleConfig = {
-  principals?: PrincipalIdentifiers
-  actions?: string[]
-  config?: aws.dataAwsIamPolicyDocument.DataAwsIamPolicyDocumentConfig
+export type Condition = {
+  [operator: string]: {
+    [key: string]: string | string[]
+  }
 }
 
-export type AwsIamRoleConfig = ConstructConfig & {
+export type PolicyStatement = {
+  sid?: string
+  actions: string[]
+  effect?: Effect
+  condition?: Condition[]
+}
+
+export type Policy = PolicyStatement[]
+
+export type AssumeRolePolicyStatement = Partial<PolicyStatement> & {
+  principals: Principals
+}
+
+export type AssumeRolePolicy = AssumeRolePolicyStatement[]
+
+export type InlinePolicy = Record<string, DataAwsIamPolicyDocumentConfig>
+
+export type AwsIamRoleProps = ConstructProps & {
   provider?: AwsProvider
-  assumeRolePrincipals?: PrincipalIdentifiers
-  assumeRoleActions?: string[]
-  roleConfig: aws.dataAwsIamPolicyDocument.DataAwsIamPolicyDocumentConfig
+  assumeRolePolicy: DataAwsIamPolicyDocumentConfig
+  inlinePolicy?: InlinePolicy
+  managedPolicies: string[]
+  maxSessionDuration?: number
+  permissionsBoundary?: string
 }

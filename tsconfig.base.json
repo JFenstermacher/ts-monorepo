@@ -10,17 +10,27 @@
     "importHelpers": true,
     "target": "es2015",
     "module": "esnext",
-    "lib": ["es2017", "dom"],
+    "lib": [
+      "es2017",
+      "dom"
+    ],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@JFenstermacher/context": ["packages/context/src/index.ts"],
+      "@JFenstermacher/context": [
+        "packages/context/src/index.ts"
+      ],
       "@JFenstermacher/tfcdk-aws-iam-role": [
         "packages/tfcdk-aws-iam-role/src/index.ts"
       ],
-      "@JFenstermacher/tfcdk-common": ["packages/tfcdk-common/src/index.ts"]
+      "@JFenstermacher/tfcdk-commons": [
+        "packages/tfcdk-commons/src/index.ts"
+      ]
     }
   },
-  "exclude": ["node_modules", "tmp"]
+  "exclude": [
+    "node_modules",
+    "tmp"
+  ]
 }
